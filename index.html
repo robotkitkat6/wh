@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+    />
+    <style>
+      .form-container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+      }
+      .radio-group {
+        margin-bottom: 15px;
+      }
+      .name-options {
+        display: flex;
+        flex-direction: column;
+      }
+      @media (max-width: 768px) {
+        .form-container {
+          padding: 10px;
+        }
+        .name-options {
+          flex-direction: column;
+        }
+      }
+.radio input {
+  margin-right: 8px; /* Adjust to ensure consistent spacing */
+  margin-left: 0; /* Ensure no extra left padding */
+}
+    </style>
+  </head>
+  <body>
+    <section class="hero is-primary is-bold">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title has-text-centered">Data Entry Form</h1>
+        </div>
+      </div>
+    </section>
+
+    <form id="form" class="form-container box" method="POST">
+      <!-- Name Section -->
+<div class="field">
+        <label class="label">NAME</label>
+        <div class="control" required>
+		<div
+          <label class="radio">
+		  
+		             <input type="radio" name="Client Name" value="Hai Pham" /> Hai Pham
+          </label>
+		 </div>
+		 <div class="field">
+		 <div
+		 <label class="radio">
+            <input type="radio" name="Client Name" value="Xuan Hai" /> Xuan Hai
+          </label>
+		   </div>
+		   <div class="field">
+		 <div
+          <label class="radio">
+            <input type="radio" name="Client Name" value="Vuong Dang" /> Vuong Dang
+          </label>
+		   </div>
+		   <div class="field">
+		 <div
+		            <label class="radio">
+            <input type="radio" name="Client Name" value="Quyet Nguyen" /> Quyet Nguyen
+          </label>
+		   </div>
+		   <div class="field">
+		 <div
+          <label class="radio">
+            <input type="radio" name="Client Name" value="Huy Nguyen" /> Huy Nguyen
+          </label>
+		            <label class="radio">
+
+
+        </div>
+</div>
+
+      <!-- Point Section -->
+      <div class="field">
+        <label class="label">POINT</label>
+        <div class="control">
+          <input
+            class="input"
+            type="number"
+            placeholder="Fill Point"
+            name="Password"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="field">
+        <label class="label">Additional Information</label>
+        <div class="control">
+          <textarea
+            class="textarea"
+            placeholder="Any additional information"
+            name="Notes"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Submit and Cancel Buttons -->
+      <div class="field is-grouped">
+        <div class="control">
+          <button class="button is-primary" type="submit" id="submit-button">
+            SUBMIT
+          </button>
+        </div>
+        <div class="control">
+          <button class="button is-danger" type="button">Cancel</button>
+        </div>
+      </div>
+    </form>
+
+     <!-- Success/Error Message -->
+    <div
+      id="message"
+      style="
+        display: none;
+        margin: 20px;
+        font-weight: bold;
+        color: green;
+        padding: 8px;
+        background-color: beige;
+        border-radius: 4px;
+        border-color: aquamarine;
+      "
+    ></div>
+
+    <script>
+      document.getElementById("form").addEventListener("submit", function (e) {
+        // Check if any radio button is selected
+        const radios = document.querySelectorAll('input[name="Client Name"]');
+        const isChecked = Array.from(radios).some((radio) => radio.checked);
+        
+        if (!isChecked) {
+          // Prevent form submission if no radio button is selected
+          e.preventDefault();
+          document.getElementById("message").textContent = "Please select a name.";
+          document.getElementById("message").style.display = "block";
+          document.getElementById("message").style.backgroundColor = "red";
+          document.getElementById("message").style.color = "white";
+          return; // Exit the function
+        }
+
+        // If a radio button is selected, proceed with form submission
+        document.getElementById("message").textContent = "Submitting...";
+        document.getElementById("message").style.display = "block";
+        document.getElementById("submit-button").disabled = true;
+
+        // Collect the form data
+        var formData = new FormData(this);
+        var keyValuePairs = [];
+        for (var pair of formData.entries()) {
+          keyValuePairs.push(pair[0] + "=" + pair[1]);
+        }
+
+        var formDataString = keyValuePairs.join("&");
+
+        // Send a POST request to your Google Apps Script
+        fetch(
+          "https://script.google.com/macros/s/AKfycbz1__m9wTaw_tFyjsk84Tx5p0A4GnQsJx3CyMSqOfFOy-xl5f5XyFGeT5pZ0lMj422H/exec",
+          {
+            redirect: "follow",
+            method: "POST",
+            body: formDataString,
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8",
+            },
+          }
+        )
+          .then(function (response) {
+            if (response) {
+              return response;
+            } else {
+              throw new Error("Failed to submit the form.");
+            }
+          })
+          .then(function (data) {
+            document.getElementById("message").textContent =
+              "Data submitted successfully!";
+            document.getElementById("message").style.display = "block";
+            document.getElementById("message").style.backgroundColor = "green";
+            document.getElementById("message").style.color = "beige";
+            document.getElementById("submit-button").disabled = false;
+            document.getElementById("form").reset();
+
+            setTimeout(function () {
+              document.getElementById("message").textContent = "";
+              document.getElementById("message").style.display = "none";
+            }, 2600);
+          })
+          .catch(function (error) {
+            console.error(error);
+            document.getElementById("message").textContent =
+              "An error occurred while submitting the form.";
+            document.getElementById("message").style.display = "block";
+          });
+      });
+    </script>
+  </body>
+</html>
