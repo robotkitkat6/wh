@@ -1,11 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
-    />
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><!--<base target="_blank">--><!-- <base href="." target="_blank"> -->
+  
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <style>
       .form-container {
         max-width: 600px;
@@ -27,20 +23,26 @@
           flex-direction: column;
         }
       }
-.radio input {
-  margin-right: 8px; /* Adjust to ensure consistent spacing */
-  margin-left: 0; /* Ensure no extra left padding */
-}
+      .radio input {
+        margin-right: 8px;
+        margin-left: 0;
+      }
     </style>
   </head>
   <body>
-    <section class="hero is-primary is-bold">
-      <div class="hero-body">
+
+
+<section class="hero is-primary is-bold">
+      <div class="label">
         <div class="container">
-          <h1 class="title has-text-centered">Data Entry Form</h1>
+<h1 class="title has-text-centered">POINT DATA</h1>
+
+
+
         </div>
       </div>
     </section>
+
 
     <form id="form" class="form-container box" method="POST">
       <!-- Name Section -->
@@ -82,17 +84,12 @@
         </div>
 </div>
 
+
       <!-- Point Section -->
       <div class="field">
         <label class="label">POINT</label>
         <div class="control">
-          <input
-            class="input"
-            type="number"
-            placeholder="Fill Point"
-            name="Password"
-            required
-          />
+          <input class="input" type="number" placeholder="Điểm : Thừa: -3 x pcs; Offset: -2 x pcs; Thiếu: -1 x pcs; ngoài quầy X2" name="Password" required="">
         </div>
       </div>
 
@@ -100,11 +97,8 @@
       <div class="field">
         <label class="label">Additional Information</label>
         <div class="control">
-          <textarea
-            class="textarea"
-            placeholder="Any additional information"
-            name="Notes"
-          ></textarea>
+          <textarea class="textarea" placeholder="Nhớ nhập mã đơn hàng và số lượng sp pick sai  " name="Notes"></textarea>
+
         </div>
       </div>
 
@@ -121,91 +115,70 @@
       </div>
     </form>
 
-     <!-- Success/Error Message -->
-    <div
-      id="message"
-      style="
+    <!-- Message for Missing Name Selection -->
+    <div id="message" style="
         display: none;
         margin: 20px;
         font-weight: bold;
-        color: green;
+        color: white;
         padding: 8px;
-        background-color: beige;
+        background-color: red;
         border-radius: 4px;
-        border-color: aquamarine;
-      "
-    ></div>
-
+      "></div>
+<form id="form" class="form-container box">
     <script>
-      document.getElementById("form").addEventListener("submit", function (e) {
-        // Check if any radio button is selected
-        const radios = document.querySelectorAll('input[name="Client Name"]');
-        const isChecked = Array.from(radios).some((radio) => radio.checked);
-        
-        if (!isChecked) {
-          // Prevent form submission if no radio button is selected
-          e.preventDefault();
-          document.getElementById("message").textContent = "Please select a name.";
-          document.getElementById("message").style.display = "block";
-          document.getElementById("message").style.backgroundColor = "red";
-          document.getElementById("message").style.color = "white";
-          return; // Exit the function
-        }
+document.getElementById("form").addEventListener("submit", function (e) {
+  e.preventDefault(); // Ngăn mở tab mới
 
-        // If a radio button is selected, proceed with form submission
-        document.getElementById("message").textContent = "Submitting...";
-        document.getElementById("message").style.display = "block";
-        document.getElementById("submit-button").disabled = true;
+  // Check if any radio button is selected
+  const radios = document.querySelectorAll('input[name="Client Name"]');
+  const isChecked = Array.from(radios).some((radio) => radio.checked);
+  
+  if (!isChecked) {
+    document.getElementById("message").textContent = "Please select a name.";
+    document.getElementById("message").style.display = "block";
+    return;
+  }
 
-        // Collect the form data
-        var formData = new FormData(this);
-        var keyValuePairs = [];
-        for (var pair of formData.entries()) {
-          keyValuePairs.push(pair[0] + "=" + pair[1]);
-        }
+  document.getElementById("submit-button").disabled = true;
 
-        var formDataString = keyValuePairs.join("&");
+  var formData = new FormData(this);
+  var keyValuePairs = [];
+  for (var pair of formData.entries()) {
+    keyValuePairs.push(pair[0] + "=" + pair[1]);
+  }
 
-        // Send a POST request to your Google Apps Script
-        fetch(
-          "https://script.google.com/macros/s/AKfycbz1__m9wTaw_tFyjsk84Tx5p0A4GnQsJx3CyMSqOfFOy-xl5f5XyFGeT5pZ0lMj422H/exec",
-          {
-            redirect: "follow",
-            method: "POST",
-            body: formDataString,
-            headers: {
-              "Content-Type": "text/plain;charset=utf-8",
-            },
-          }
-        )
-          .then(function (response) {
-            if (response) {
-              return response;
-            } else {
-              throw new Error("Failed to submit the form.");
-            }
-          })
-          .then(function (data) {
-            document.getElementById("message").textContent =
-              "Data submitted successfully!";
-            document.getElementById("message").style.display = "block";
-            document.getElementById("message").style.backgroundColor = "green";
-            document.getElementById("message").style.color = "beige";
-            document.getElementById("submit-button").disabled = false;
-            document.getElementById("form").reset();
+  var formDataString = keyValuePairs.join("&");
 
-            setTimeout(function () {
-              document.getElementById("message").textContent = "";
-              document.getElementById("message").style.display = "none";
-            }, 2600);
-          })
-          .catch(function (error) {
-            console.error(error);
-            document.getElementById("message").textContent =
-              "An error occurred while submitting the form.";
-            document.getElementById("message").style.display = "block";
-          });
-      });
+  fetch(
+    "https://script.google.com/macros/s/AKfycbz1__m9wTaw_tFyjsk84Tx5p0A4GnQsJx3CyMSqOfFOy-xl5f5XyFGeT5pZ0lMj422H/exec",
+    {
+      redirect: "follow",
+      method: "POST",
+      body: formDataString,
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8",
+      },
+    }
+  )
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error("Failed to submit the form.");
+      }
+    })
+    .catch(function (error) {
+      console.error(error);
+      document.getElementById("message").textContent =
+        "An error occurred while submitting the form.";
+      document.getElementById("message").style.display = "block";
+    })
+    .finally(() => {
+      document.getElementById("submit-button").disabled = false;
+      document.getElementById("form").reset();
+    });
+});
+
     </script>
-  </body>
-</html>
+  
+
+</body></html>
