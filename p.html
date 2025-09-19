@@ -1,0 +1,151 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<section class="hero is-primary is-bold">
+  <div class="label">
+    <div class="container">
+      <h1 class="title has-text-centered">POINT DATA</h1>
+    </div>
+  </div>
+</section>
+
+<form id="myForm" class="form-container box">
+  <!-- Name Section -->
+  <div class="field">
+    <label class="label">NAME</label>
+    <div class="control">
+      <label class="radio"><input type="radio" name="ClientName" value="Hai Pham"> Hai Pham</label>
+      <label class="radio"><input type="radio" name="ClientName" value="Xuan Hai"> Xuan Hai</label>
+      <label class="radio"><input type="radio" name="ClientName" value="Vuong Dang"> Vuong Dang</label>
+      <label class="radio"><input type="radio" name="ClientName" value="Quyet Nguyen"> Quyet Nguyen</label>
+      <label class="radio"><input type="radio" name="ClientName" value="Huy Nguyen"> Huy Nguyen</label>
+    </div>
+  </div>
+
+  <!-- Point -->
+  <div class="field">
+    <label class="label">POINT</label>
+    <div class="control">
+      <input class="input" type="number" name="Password" placeholder="Điểm" required>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="field">
+    <label class="label">Additional Information</label>
+    <div class="control">
+      <textarea class="textarea" name="Notes" placeholder="Nhập mã đơn hàng và số lượng sp pick sai"></textarea>
+    </div>
+  </div>
+
+  <!-- Order ID -->
+  <div class="field">
+    <label class="label">Order ID (Optional)</label>
+    <div class="control">
+      <input class="input" type="text" name="OrderID" placeholder="Nhập mã đơn hàng">
+    </div>
+  </div>
+
+  <!-- Upload Photo -->
+  <div class="field">
+    <label class="label">Upload Photo (Optional)</label>
+    <div class="control">
+      <input type="file" id="photo" accept="image/*" capture="environment">
+    </div>
+  </div>
+
+  <!-- Hidden field chứa Base64 -->
+  <input type="hidden" name="PhotoBase64" id="PhotoBase64">
+
+  <!-- Submit -->
+  <div class="field is-grouped">
+    <div class="control">
+      <button class="button is-primary" type="submit" id="submit-button">SUBMIT</button>
+    </div>
+  </div>
+</form>
+
+<script>
+  // Resize & nén ảnh dưới 500KB
+  document.getElementById("photo").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement("canvas");
+        const maxSize = 1600; // resize max chiều dài
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.8;
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+        // loop giảm chất lượng đến khi < 500KB
+        while (dataUrl.length / 1024 > 500 && quality > 0.3) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL("image/jpeg", quality);
+        }
+
+        document.getElementById("PhotoBase64").value = dataUrl.split(",")[1];
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Submit form
+  document.getElementById("myForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    fetch("https://script.google.com/macros/s/AKfycbxSUepJKcGqwS6tLAI67ovm710o6-hx7LOJY9sL8dTG_Ofn9fQPFzN0xJDc9pDkZd7r/exec", {   // <-- thay bằng URL Google Apps Script WebApp
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.text())
+    .then(txt => {
+      alert("Submitted successfully!");
+      document.getElementById("myForm").reset();
+      document.getElementById("PhotoBase64").value = "";
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error submitting form");
+    });
+  });
+</script>
+
+</body>
+</html>
