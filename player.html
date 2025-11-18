@@ -174,8 +174,7 @@
       const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2A9KHUMb5Lzo9bHqndZ5DRg8Lmp5gtLgFBUhgYANUgiARQIF3opu_GtYegPbFhi_vgA/exec';
 
       /**
-       * Hàm thay thế google.script.run
-       * Gửi yêu cầu POST Simple Request (Form Data) để tránh lỗi CORS Preflight.
+       * Hàm thay thế google.script.run, sử dụng Form Data để tránh lỗi CORS Preflight
        * @param {string} funcName Tên hàm Apps Script cần gọi (vd: 'getPlaylist')
        * @param {Object} data Dữ liệu gửi đi (các tham số của hàm: userCode, link, title...)
        * @returns {Promise<any>} Kết quả trả về từ Apps Script
@@ -190,12 +189,9 @@
         try {
           const response = await fetch(url, {
             method: 'POST',
-            mode: 'cors', // ✅ Thêm mode: 'cors'
-            headers: {
-              // ✅ QUAN TRỌNG: Dùng x-www-form-urlencoded để tránh OPTIONS preflight request (SIMPLE POST)
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            // Gửi funcName và các tham số khác trong body
+            // ✅ QUAN TRỌNG: Không cần khai báo Content-Type, trình duyệt sẽ tự đặt
+            // là application/x-www-form-urlencoded, tạo ra Simple Request.
+            // KHÔNG GỬI headers: {'Content-Type': 'application/json'},
             body: formData.toString()
           });
           
@@ -222,6 +218,7 @@
           return null; 
         }
       }
+      //********
 
       function getYouTubeVideoId(url) {
         try {
@@ -396,5 +393,6 @@
   </body>
 
 </html>
+
 
 
