@@ -174,7 +174,8 @@
       const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-eYX9R7ufRz0uJOcTGII5ONf7Q5ai0e41ShgoL46Jm6RMVuBOSayd4SIL5F-ThpPbpw/exec';
 
       /**
-       * Hàm thay thế google.script.run, sử dụng JSON cho độ tin cậy cao
+       * Hàm thay thế google.script.run
+       * Gửi yêu cầu POST Simple Request (Form Data) để tránh lỗi CORS Preflight.
        * @param {string} funcName Tên hàm Apps Script cần gọi (vd: 'getPlaylist')
        * @param {Object} data Dữ liệu gửi đi (các tham số của hàm: userCode, link, title...)
        * @returns {Promise<any>} Kết quả trả về từ Apps Script
@@ -182,18 +183,19 @@
       async function callAppsScript(funcName, data = {}) {
         const url = APPS_SCRIPT_URL; 
         
-        // Gộp tên hàm vào đối tượng dữ liệu
-        data.func = funcName; 
+        // Tạo một đối tượng URLSearchParams để chứa TẤT CẢ tham số (Form Data).
+        const formData = new URLSearchParams(data);
+        formData.append('func', funcName); // THÊM TÊN HÀM VÀO BODY POST
         
         try {
           const response = await fetch(url, {
             method: 'POST',
             headers: {
-              // Gửi Content-Type: application/json
-              'Content-Type': 'application/json',
+              // ✅ QUAN TRỌNG: Dùng x-www-form-urlencoded để tránh OPTIONS preflight request (SIMPLE POST)
+              'Content-Type': 'application/x-www-form-urlencoded',
             },
-            // Chuyển đối tượng data thành chuỗi JSON
-            body: JSON.stringify(data)
+            // Gửi funcName và các tham số khác trong body
+            body: formData.toString()
           });
           
           if (!response.ok) {
@@ -391,4 +393,5 @@
     </script>
     <script src="https://www.youtube.com/iframe_api"></script>
   </body>
+
 </html>
