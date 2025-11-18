@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <base target="_top">
+    <title>YouTube Player</title>
+    <style>
+      #currentTitle {
+        position: relative;
+        width: 200px;
+        height: 24px;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      #scrollingTitle {
+        position: absolute;
+        white-space: nowrap;
+        display: inline-block;
+        animation: scroll-left 12s linear infinite;
+        color: #00ffcc;
+        font-weight: bold;
+      }
+
+      @keyframes scroll-left {
+        0% { left: 100%; }
+        100% { left: -100%; }
+      }
+
+      body {
+        background-color: #000;
+        color: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #player {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 0;
+       // pointer-events: none;
+      }
+
+      #uiContainer {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.5); /* Tăng độ đậm nền để dễ nhìn hơn */
+       // color: rgba(255, 255, 255, 0.7); /* chữ mờ nhẹ */
+        padding: 12px;
+        border-radius: 12px;
+        max-width: 270px;
+        z-index: 2;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      #controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      #currentTitle {
+        max-width: 180px;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      #nextSongs ul {
+        margin: 0;
+        padding-left: 14px;
+        font-size: 14px;
+        font-weight: normal;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 8px;
+      }
+      #nextSongs h4 {
+        font-size: 16px;
+        color: #00ffff;
+        font-weight: bold;
+        margin-bottom: 6px;
+      }
+      
+      #userCodeDisplay {
+        font-size:18px;
+        color:yellow;
+        padding-left:1px;
+        margin-bottom: 10px;
+      }
+
+      button {
+        font-size: 16px;
+        padding: 6px 10px;
+        border: none;
+        border-radius: 6px;
+        background-color: #333;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #555;
+      }
+      
+      /* Riêng nút Play/Pause và Next */
+      #controls button {
+        background-color: #00cc99;
+      }
+      #controls button:hover {
+        background-color: #00aa88;
+      }
+
+      #toast {
+      position: fixed;
+      top: 50%; /* Đổi từ top: 10px sang top: 50% */
+      left: 50%;
+      transform: translate(-50%, -50%); /* Thêm translateY để căn giữa dọc */
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px 24px;
+      border-radius: 8px;
+      font-size: 30px;
+      opacity: 0;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      z-index: 9999;
+      visibility: hidden; /* Thêm visibility để ẩn hẳn */
+    }
+
+    #toast.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1); /* Hiệu ứng nhẹ khi xuất hiện */
+    }
+
+    </style>
+  </head>
+  <body>
+    <div id="player"></div>
+
+    <div id="uiContainer">
+       <div id="userCodeDisplay">
+      Mã của bạn: <span id="code">...</span>
+      <button onclick="resetUserCode()" style="margin-left: 10px;">🔄Đổi mã</button>
+    </div>
+      <div id="controls">
+        <button onclick="togglePlayPause()">⏯</button>
+        <button onclick="nextSong()">⏭</button>
+        <div id="currentTitle"><div id="scrollingTitle">Đang tải...</div></div>
+      </div>
+
+      <div id="nextSongs">
+        <h4>🎶 Tiếp theo:</h4>
+        <ul id="playlistDisplay"></ul>
+      </div>
+    </div>
+    <div id="toast"></div>
+
+    <script>
+      let player;
+      let playlist = [];
+      let currentVideoId = null;
+      let isPlaying = true;
+      let userCode = null;
+      
+      // ⚠️ CẦN THAY THẾ BẰNG URL TRIỂN KHAI APPS SCRIPT CỦA BẠN
+      // Ví dụ: 'https://script.google.com/macros/s/AKfycbyUUONbGxqCGiCvCtpDdK4tqx6yUWg82Ii_IEjHHP2FVjjqIwcBEQc68MRnJ_zgBIt7mw/exec';
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-eYX9R7ufRz0uJOcTGII5ONf7Q5ai0e41ShgoL46Jm6RMVuBOSayd4SIL5F-ThpPbpw/exec';
+
+      /**
+       * Hàm thay thế google.script.run, sử dụng JSON cho độ tin cậy cao
+       * @param {string} funcName Tên hàm Apps Script cần gọi (vd: 'getPlaylist')
+       * @param {Object} data Dữ liệu gửi đi (các tham số của hàm: userCode, link, title...)
+       * @returns {Promise<any>} Kết quả trả về từ Apps Script
+       */
+      async function callAppsScript(funcName, data = {}) {
+        const url = APPS_SCRIPT_URL; 
+        
+        // Gộp tên hàm vào đối tượng dữ liệu
+        data.func = funcName; 
+        
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              // Gửi Content-Type: application/json
+              'Content-Type': 'application/json',
+            },
+            // Chuyển đối tượng data thành chuỗi JSON
+            body: JSON.stringify(data)
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Apps Script returned a non-OK status: ${response.status} ${response.statusText}`);
+          }
+          
+          const text = await response.text(); 
+          let result;
+          try {
+             result = JSON.parse(text); 
+          } catch(e) {
+             console.error("Lỗi phân tích JSON:", text);
+             throw new Error("Phản hồi không phải JSON hợp lệ.");
+          }
+
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          return result;
+        } catch (e) {
+          console.error("Lỗi khi gọi Apps Script:", funcName, e);
+          showToast(`❌ Lỗi API: ${e.message.substring(0, 50)}...`);
+          return null; 
+        }
+      }
+
+      function getYouTubeVideoId(url) {
+        try {
+          const parsed = new URL(url);
+          if (parsed.hostname.includes("youtu.be")) {
+            return parsed.pathname.slice(1);
+          } else if (parsed.hostname.includes("youtube.com")) {
+            return parsed.searchParams.get("v");
+          }
+        } catch (e) {
+          console.error("Lỗi phân tích URL:", e);
+        }
+        return null;
+      }
+
+      async function loadPlaylist() {
+        if (!userCode) return;
+
+        // Gọi API: func='getPlaylist'
+        const data = await callAppsScript('getPlaylist', { userCode: userCode });
+
+        if (!data || data.length === 0 || (data.length === 1 && data[0].videoId === "")) {
+          document.getElementById("scrollingTitle").textContent = "🕒 Chờ bài hát...";
+          document.getElementById("playlistDisplay").innerHTML = "";
+          return;
+        }
+
+        playlist = data;
+        const current = playlist[0];
+        const newVideoId = getYouTubeVideoId(current.link);
+
+        if (!newVideoId) {
+          document.getElementById("scrollingTitle").textContent = "❌ Không tìm được videoId";
+          return;
+        }
+
+        if (newVideoId !== currentVideoId) {
+          currentVideoId = newVideoId;
+          document.getElementById("scrollingTitle").textContent = "🎵 " + current.title;
+
+          if (!player) {
+            player = new YT.Player("player", {
+              videoId: newVideoId,
+              width: "100%",
+              height: "100%",
+              playerVars: {
+                autoplay: 1,
+                controls: 1,
+                rel: 0,
+                modestbranding: 1
+              },
+              events: {
+                onReady: () => {
+                  player.playVideo();
+                  isPlaying = true;
+                },
+                onStateChange: onPlayerStateChange
+              }
+            });
+          } else {
+            // Dừng video cũ trước khi load cái mới
+            if (player.stopVideo) player.stopVideo(); 
+            player.loadVideoById(newVideoId);
+            player.playVideo();
+            isPlaying = true;
+          }
+        }
+
+        let html = "";
+        for (let i = 1; i < Math.min(playlist.length, 6); i++) {
+          html += `<li>${playlist[i].title}</li>`;
+        }
+        document.getElementById("playlistDisplay").innerHTML = html;
+      }
+
+      async function nextSong() {
+        showToast("Chuyển bài... ⏭️");
+        // Gọi API: func='nextSong'
+        await callAppsScript('nextSong', { userCode: userCode });
+        loadPlaylist();
+      }
+
+      function togglePlayPause() {
+        if (!player) return;
+        const state = player.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) {
+          player.pauseVideo();
+          isPlaying = false;
+          showToast("⏸ Tạm dừng");
+        } else {
+          player.playVideo();
+          isPlaying = true;
+          showToast("▶️ Tiếp tục");
+        }
+      }
+
+      function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.ENDED) {
+          nextSong();
+        }
+      }
+
+      function resetUserCode() {
+        localStorage.removeItem('userCode');
+        location.reload();
+      }
+
+      async function initUserCode() {
+        const savedCode = localStorage.getItem('userCode');
+        if (savedCode) {
+          userCode = savedCode;
+          document.getElementById('code').textContent = savedCode;
+          loadPlaylist();
+        } else {
+          // Gọi API: func='generateUserCode'
+          const code = await callAppsScript('generateUserCode');
+          if (code) {
+            userCode = code;
+            localStorage.setItem('userCode', code);
+            document.getElementById('code').textContent = code;
+            loadPlaylist();
+          }
+        }
+      }
+
+      function checkForChanges() {
+        loadPlaylist();
+      }
+
+      async function checkControlCommand() {
+        if (!userCode || !player) return;
+
+        // Gọi API: func='getControlCommand'
+        const command = await callAppsScript('getControlCommand', { userCode: userCode });
+
+        if (!command) return;
+
+        if (command === "PLAY") {
+          player.playVideo();
+          showToast("▶️ Play");
+        } else if (command === "VOLUME_UP") {
+          const currentVol = player.getVolume();
+          player.setVolume(Math.min(currentVol + 10, 100));
+          showToast("🔊 Volume Up");
+        } else if (command === "VOLUME_DOWN") {
+          const currentVol = player.getVolume();
+          player.setVolume(Math.max(currentVol - 15, 0));
+          showToast("🔉 Volume Down");
+        } else if (command === "PAUSE") {
+          player.pauseVideo();
+          showToast("⏸ Pause");
+        }
+        
+        // Xoá lệnh sau khi xử lý (không cần chờ kết quả)
+        // Gọi API: func='clearControlCommand'
+        callAppsScript('clearControlCommand', { userCode: userCode });
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'show';
+        setTimeout(() => toast.className = '', 2000);
+      }
+
+      setInterval(checkForChanges, 10000); // 10 giây
+      setInterval(checkControlCommand, 2000); // 2 giây
+      window.onload = initUserCode;
+
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+  </body>
+</html>
