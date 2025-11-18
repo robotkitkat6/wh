@@ -43,15 +43,13 @@
         width: 100vw;
         height: 100vh;
         z-index: 0;
-       // pointer-events: none;
       }
 
       #uiContainer {
         position: absolute;
         top: 10px;
         right: 10px;
-        background: rgba(0, 0, 0, 0.5); /* Tăng độ đậm nền để dễ nhìn hơn */
-       // color: rgba(255, 255, 255, 0.7); /* chữ mờ nhẹ */
+        background: rgba(0, 0, 0, 0.5);
         padding: 12px;
         border-radius: 12px;
         max-width: 270px;
@@ -109,7 +107,6 @@
         background-color: #555;
       }
       
-      /* Riêng nút Play/Pause và Next */
       #controls button {
         background-color: #00cc99;
       }
@@ -119,9 +116,9 @@
 
       #toast {
       position: fixed;
-      top: 50%; /* Đổi từ top: 10px sang top: 50% */
+      top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%); /* Thêm translateY để căn giữa dọc */
+      transform: translate(-50%, -50%);
       background-color: rgba(0, 0, 0, 0.8);
       color: white;
       padding: 20px 24px;
@@ -130,13 +127,13 @@
       opacity: 0;
       transition: opacity 0.5s ease, transform 0.5s ease;
       z-index: 9999;
-      visibility: hidden; /* Thêm visibility để ẩn hẳn */
+      visibility: hidden;
     }
 
     #toast.show {
     visibility: visible;
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.1); /* Hiệu ứng nhẹ khi xuất hiện */
+    transform: translate(-50%, -50%) scale(1.1);
     }
 
     </style>
@@ -169,29 +166,24 @@
       let isPlaying = true;
       let userCode = null;
       
-      // ⚠️ CẦN THAY THẾ BẰNG URL TRIỂN KHAI APPS SCRIPT CỦA BẠN
-      // Ví dụ: 'https://script.google.com/macros/s/AKfycbyUUONbGxqCGiCvCtpDdK4tqx6yUWg82Ii_IEjHHP2FVjjqIwcBEQc68MRnJ_zgBIt7mw/exec';
-      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2A9KHUMb5Lzo9bHqndZ5DRg8Lmp5gtLgFBUhgYANUgiARQIF3opu_GtYegPbFhi_vgA/exec';
+      // ⚠️ CẦN THAY THẾ BẰNG URL TRIỂN KHAI APPS SCRIPT MỚI NHẤT CỦA BẠN
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2A9KHUMb5Lzo9bHqndZ5DRg8Lmp5gtLgFBUhgYANUgiARQIF3opu_GtYegPbFhi_vgA/exec'; 
 
       /**
-       * Hàm thay thế google.script.run, sử dụng Form Data để tránh lỗi CORS Preflight
-       * @param {string} funcName Tên hàm Apps Script cần gọi (vd: 'getPlaylist')
-       * @param {Object} data Dữ liệu gửi đi (các tham số của hàm: userCode, link, title...)
-       * @returns {Promise<any>} Kết quả trả về từ Apps Script
+       * Hàm callAppsScript sử dụng Form Data (Simple Request) để tránh lỗi CORS Preflight
        */
       async function callAppsScript(funcName, data = {}) {
         const url = APPS_SCRIPT_URL; 
         
         // Tạo một đối tượng URLSearchParams để chứa TẤT CẢ tham số (Form Data).
         const formData = new URLSearchParams(data);
-        formData.append('func', funcName); // THÊM TÊN HÀM VÀO BODY POST
+        formData.append('func', funcName);
         
         try {
           const response = await fetch(url, {
             method: 'POST',
-            // ✅ QUAN TRỌNG: Không cần khai báo Content-Type, trình duyệt sẽ tự đặt
-            // là application/x-www-form-urlencoded, tạo ra Simple Request.
-            // KHÔNG GỬI headers: {'Content-Type': 'application/json'},
+            // Trình duyệt sẽ tự đặt Content-Type: application/x-www-form-urlencoded
+            // Đây là Simple Request và tránh lỗi Preflight.
             body: formData.toString()
           });
           
@@ -218,7 +210,6 @@
           return null; 
         }
       }
-      //********
 
       function getYouTubeVideoId(url) {
         try {
@@ -236,8 +227,6 @@
 
       async function loadPlaylist() {
         if (!userCode) return;
-
-        // Gọi API: func='getPlaylist'
         const data = await callAppsScript('getPlaylist', { userCode: userCode });
 
         if (!data || data.length === 0 || (data.length === 1 && data[0].videoId === "")) {
@@ -279,7 +268,6 @@
               }
             });
           } else {
-            // Dừng video cũ trước khi load cái mới
             if (player.stopVideo) player.stopVideo(); 
             player.loadVideoById(newVideoId);
             player.playVideo();
@@ -296,7 +284,6 @@
 
       async function nextSong() {
         showToast("Chuyển bài... ⏭️");
-        // Gọi API: func='nextSong'
         await callAppsScript('nextSong', { userCode: userCode });
         loadPlaylist();
       }
@@ -334,12 +321,14 @@
           loadPlaylist();
         } else {
           // Gọi API: func='generateUserCode'
-          const code = await callAppsScript('generateUserCode');
-          if (code) {
-            userCode = code;
-            localStorage.setItem('userCode', code);
-            document.getElementById('code').textContent = code;
+          const result = await callAppsScript('generateUserCode');
+          if (result && result.userCode) {
+            userCode = result.userCode;
+            localStorage.setItem('userCode', userCode);
+            document.getElementById('code').textContent = userCode;
             loadPlaylist();
+          } else {
+            document.getElementById("scrollingTitle").textContent = "❌ Lỗi khởi tạo Code";
           }
         }
       }
@@ -351,7 +340,6 @@
       async function checkControlCommand() {
         if (!userCode || !player) return;
 
-        // Gọi API: func='getControlCommand'
         const command = await callAppsScript('getControlCommand', { userCode: userCode });
 
         if (!command) return;
@@ -372,8 +360,6 @@
           showToast("⏸ Pause");
         }
         
-        // Xoá lệnh sau khi xử lý (không cần chờ kết quả)
-        // Gọi API: func='clearControlCommand'
         callAppsScript('clearControlCommand', { userCode: userCode });
       }
 
@@ -391,8 +377,4 @@
     </script>
     <script src="https://www.youtube.com/iframe_api"></script>
   </body>
-
 </html>
-
-
-
