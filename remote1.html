@@ -18,7 +18,7 @@
 
     /* Đã sửa: Tối ưu hoá Playlist Item */
     .playlist-item {
-      padding: 10px 15px; /* Giảm padding */
+      padding: 10px 15px; 
       margin-bottom: 12px;
       background: white;
       border-radius: 12px;
@@ -35,10 +35,20 @@
     .playlist-item span {
         font-size: 18px; 
         flex-grow: 1; 
-        white-space: nowrap; /* Ngăn xuống dòng */
-        overflow: hidden; /* Ẩn nội dung thừa */
-        text-overflow: ellipsis; /* Thêm dấu ... */
-        margin-right: 10px; /* Khoảng cách với nút xóa */
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        margin-right: 10px; 
+    }
+
+    /* Đã sửa: Tăng vùng bấm nút xóa (🗑) */
+    .playlist-item button {
+        padding: 8px 15px; /* Tăng padding để dễ bấm */
+        font-size: 16px;
+        background: #e74c3c;
+        margin-right: 0;
+        flex-shrink: 0; 
+        min-width: 40px; 
     }
 
     h1 {
@@ -75,11 +85,12 @@
         margin-bottom: 10px;
     }
     
+    /* Đã sửa: Giảm kích thước nút Tìm kiếm */
     .search-box button {
         flex-shrink: 0;
         width: 120px; 
-        padding: 20px;
-        font-size: 20px;
+        padding: 15px; /* Giảm padding */
+        font-size: 18px; /* Giảm font */
     }
 
     button {
@@ -94,22 +105,14 @@
       transition: background 0.2s, transform 0.1s;
     }
     
-    .playlist-item button {
-        padding: 6px 12px;
-        font-size: 16px;
-        background: #e74c3c;
-        margin-right: 0;
-        flex-shrink: 0; /* Ngăn nút xóa bị co lại */
-    }
-
-    /* Đã sửa: Tối ưu hoá Connect Box */
+    /* Tối ưu hoá Connect Box */
     .connect-box {
         display: flex;
-        gap: 10px; /* Giảm khoảng cách */
+        gap: 10px; 
         align-items: center; 
         margin-bottom: 16px;
-        flex-wrap: nowrap; /* QUAN TRỌNG: Ngăn các phần tử xuống dòng */
-        overflow-x: auto; /* Thêm scroll ngang nếu không fit */
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
     }
 
     .connect-box input {
@@ -125,7 +128,7 @@
         font-size: 14px; 
         padding: 8px 12px; 
         width: auto;
-        flex-shrink: 0; /* Ngăn nút co lại */
+        flex-shrink: 0; 
         margin-right: 0 !important;
     }
     
@@ -201,6 +204,11 @@
         min-width: 80px;
     }
 
+    /* Đã sửa: Giảm kích thước chữ của label Karaoke/Playlist */
+    .checkbox-label {
+        font-size: 18px !important; 
+    }
+
 
     /* --- Mobile Optimization (Max Width 480px) --- */
     @media (max-width: 480px) {
@@ -223,25 +231,31 @@
           padding: 8px; 
       }
       .playlist-item span {
-          font-size: 14px; /* Chữ nhỏ hơn */
+          font-size: 14px; 
       }
       .playlist-item button {
-          padding: 4px 8px;
+          padding: 8px 12px; 
           font-size: 14px;
       }
 
-      /* Tối ưu hóa Tìm kiếm/Checkbox */
+      /* Đã sửa: Tối ưu hóa Tìm kiếm/Checkbox trên mobile */
       .search-box {
           flex-direction: column; 
       }
       .search-box button {
           width: 100%;
-          font-size: 18px;
+          font-size: 16px; /* Giảm font nút tìm kiếm */
+          padding: 10px;
       }
       
       #searchInput, #playlistLinkInput {
-        padding: 14px;
-        font-size: 20px;
+        padding: 12px;
+        font-size: 18px;
+      }
+
+      /* Đã sửa: Tối ưu kích thước label checkbox trên mobile */
+      .checkbox-label {
+        font-size: 16px !important;
       }
       
       /* Tối ưu hoá Kết quả tìm kiếm */
@@ -267,7 +281,7 @@
 </head>
 
 <body>
-  <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+  <div id="fixedControls" style="position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
     <button onclick="openTVLink()" style="
       font-size: 12px;
       padding: 6px 12px;
@@ -280,6 +294,19 @@
       margin-right: 0; 
     ">
       📺 Link cho TV
+    </button>
+    <button onclick="sendCommand('NEXT')" style="
+      font-size: 12px;
+      padding: 6px 12px;
+      background-color: #f1c40f; 
+      color: black;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-right: 0; 
+    ">
+      ⏭ Qua bài
     </button>
   </div>
   
@@ -295,7 +322,7 @@
   <ul id="playlist" style="list-style: none; padding: 0;"></ul>
 
 <div class="control-row" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-  <button onclick="sendCommand('NEXT')">⏭ Qua bài</button>
+  <button onclick="sendCommand('NEXT')">⏭ Qua bài</button> 
   <button onclick="sendCommand('PLAY')">▶️ Play</button>
   <button onclick="sendCommand('PAUSE')">⏸ Pause</button>
   <button onclick="sendCommand('VOL_DOWN')">🔉 Vol -</button>
@@ -306,9 +333,9 @@
   <h1>YouTube Jukebox</h1>
   <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
     <input type="checkbox" id="karaokeCheckbox" checked style="transform: scale(1.5); width: 15px; height: 15px;">
-    <label for="karaokeCheckbox" style="font-size: 20px;">🎤 Tìm Karaoke</label>
+    <label for="karaokeCheckbox" class="checkbox-label">🎤 Tìm Karaoke</label>
     <input type="checkbox" id="playlistCheckbox" style="transform: scale(1.5); width: 15px; height: 15px; margin-left: 20px;">
-    <label for="playlistCheckbox" style="font-size: 20px;">📃 Playlist</label>
+    <label for="playlistCheckbox" class="checkbox-label">📃 Playlist</label>
   </div>
   
   <input type="text" id="playlistLinkInput" placeholder="Nhập Link/ID Playlist YouTube (list=...)" onblur="savePlaylistLink()">
@@ -339,7 +366,6 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // !!! CẢNH BÁO: Cần THAY THẾ bằng khóa API YouTube của bạn để đảm bảo hoạt động ổn định
     const YOUTUBE_API_KEY = 'AIzaSyBu2W83cmzz5vhpWQsLvPzWA3F62y-5i-4'; 
     const RESULTS_PER_PAGE = 20;
 
@@ -505,7 +531,6 @@
         songs.sort((a, b) => a.timestamp - b.timestamp);
 
         songs.forEach((s, index) => {
-          // KHÔNG cắt chuỗi ở đây. Việc cắt chuỗi sẽ được thực hiện bởi CSS (text-overflow: ellipsis)
           const shortTitle = s.title; 
           const li = document.createElement("li");
           li.className = "playlist-item";
@@ -536,7 +561,7 @@
     }
 
     function removeSong(key) {
-      if (!currentRoom) return;
+      if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
       db.ref(`rooms/${currentRoom}/playlist/${key}`).remove();
       showToast("🗑 Đã xóa bài");
     }
