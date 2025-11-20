@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <title>YouTube Jukebox Remote</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f7f7;
+      padding: 35px;
+      margin: 0;
+    }
+
+    .playlist-item {
+      padding: 1px;
+      margin-bottom: 12px;
+      background: white;
+      border-radius: 12px;
+      font-size: 40px;
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      cursor: grab;
+      /* Điều chỉnh cho danh sách chờ trong remote.html */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+    }
+    
+    .playlist-item span {
+        font-size: 24px;
+    }
+
+    h1 {
+      color: #cc0000;
+      font-size: 26px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    h2 {
+        font-size: 20px;
+        color: #333;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 32px;
+      font-size: 38px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+      border: 1px solid #ccc; /* Thêm border cho input */
+    }
+
+    button {
+      padding: 26px;
+      font-size: 24px;
+      background: #cc0000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    
+    /* Thiết kế riêng cho nút trong danh sách chờ */
+    .playlist-item button {
+        padding: 6px 12px;
+        font-size: 20px;
+        background: #e74c3c;
+        margin-right: 0;
+    }
+
+    .btn-no {
+      background-color: #f39c12;
+      color: white;
+      padding: 1px;
+      font-size: 1px;
+    }
+
+    button:hover {
+      background: #a80000;
+    }
+
+    button:active {
+      background: #880000;
+      transform: scale(0.88);
+      outline: none;
+    }
+
+    #loadMoreBtn {
+      width: 100%;
+      margin-top: 38px;
+    }
+
+    .video-item {
+      display: flex;
+      align-items: center;
+      background: white;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .video-item img {
+      /* Điều chỉnh lại kích thước ảnh cho remote.html */
+      width: 30%; 
+      max-width: 150px;
+      height: auto;
+      object-fit: cover;
+    }
+
+    .video-info {
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .video-title {
+      font-size: 20px; /* Nhỏ hơn cho remote */
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Định dạng lại nút trong kết quả tìm kiếm */
+    .video-item button {
+        padding: 10px;
+        font-size: 16px;
+        margin-right: 0;
+    }
+
+    #toast {
+      position: fixed;
+      top: 1px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      font-size: 24px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+        visibility: visible;
+        opacity: 1;
+    }
+    
+    .connect-box {
+        display: flex;
+        gap: 16px; 
+        align-items: center; 
+        margin-bottom: 16px;
+    }
+
+    .connect-box input {
+        font-size: 30px; 
+        padding: 24px; 
+        flex: 1;
+        box-sizing: border-box;
+        margin-bottom: 0;
+    }
+    
+    .control-row button {
+        background-color: #4caf50; 
+        padding: 16px 18px; 
+        font-size: 19px;
+        margin-right: 0;
+        flex-grow: 1;
+    }
+
+    @media (max-width: 480px) {
+      .video-title {
+        font-size: 16px;
+      }
+      .video-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .video-item img {
+        width: 100%;
+        max-height: 180px;
+      }
+      .video-item .button-group button {
+        width: 100%;
+        margin-top: 16px;
+      }
+      .connect-box input {
+          font-size: 18px;
+          padding: 12px;
+      }
+      .control-row button {
+          font-size: 16px;
+          padding: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+    <button onclick="openTVLink()" style="
+      font-size: 12px;
+      padding: 6px 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-right: 0; /* Loại bỏ margin thừa */
+    ">
+      📺 Link cho TV
+    </button>
+  </div>
+  
+  <h2></h2>
+ 
+  <div id="userConnectBox" class="connect-box">
+    <input id="userCodeInput" type="text" placeholder="Mã từ TV" maxlength="5">
+    <button id="connectBtn" onclick="connectRoom()" style="font-size: 16px; width: auto; margin-right: 0;">✅ Kết nối</button>
+    <button id="logoutBtn" onclick="clearRoomCode()" style="display: none; font-size: 16px; background: #ccc; color: #333; width: auto; margin-right: 0;">🚪Thoát</button>
+  </div>
+
+  <h2>DANH SÁCH CHỜ</h2>
+  <ul id="playlist" style="list-style: none; padding: 0;"></ul>
+
+<div class="control-row" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+  <button onclick="sendCommand('NEXT')">⏭ Qua bài</button>
+  <button onclick="sendCommand('PLAY')">▶️ Play</button>
+  <button onclick="sendCommand('PAUSE')">⏸ Pause</button>
+  <button onclick="sendCommand('VOL_DOWN')">🔉 Volume -</button>
+  <button onclick="sendCommand('VOL_UP')">🔊 Volume +</button>
+  <button style="background-color: #999;" onclick="clearPlaylist()">🗑 Xóa list đợi</button>
+</div>
+
+  <h1>YouTube Jukebox</h1>
+  <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+    <input type="checkbox" id="karaokeCheckbox" checked style="transform: scale(2); width: 20px; height: 20px;">
+    <label for="karaokeCheckbox" style="font-size: 24px;">🎤 Tìm Karaoke</label>
+    </div>
+  <input type="text" id="searchInput" placeholder="Nhập tên bài hát...">
+  <button onclick="searchYouTube()">Tìm kiếm</button>
+
+  <div id="searchResults"></div>
+  <div id="toast"></div>
+
+
+  <script>
+    // --- CẤU HÌNH FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAIwBqg8EYLU7TQXfOO697C4D5p5_GeghQ", // Dùng key cũ
+      authDomain: "karaoke-home.firebaseapp.com",
+      databaseURL: "https://karaoke-home-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "karaoke-home",
+      storageBucket: "karaoke-home.firebasestorage.app",
+      messagingSenderId: "285959719922",
+      appId: "1:285959719922:web:6cb594ebb3ef854124796b",
+      measurementId: "G-EH8DQLGWSY"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // Key API YouTube (Sử dụng tạm key từ file cũ)
+    const YOUTUBE_API_KEY = 'AIzaSyBu2W83cmzz5vhpWQsLvPzWA3F62y-5i-4';
+
+    let currentRoom = null;
+
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        searchYouTube();
+      }
+    });
+    
+    // --- KHỞI TẠO VÀ KẾT NỐI ---
+    window.onload = function () {
+      const storedCode = localStorage.getItem("lastRoom");
+      if (storedCode && /^\d{5}$/.test(storedCode)) {
+        document.getElementById('userCodeInput').value = storedCode;
+        connectRoom(storedCode);
+        showToast("🔄 Đã tự động kết nối");
+      }
+      
+      const karaokeChecked = localStorage.getItem("karaokeCheckbox") === "true";
+      document.getElementById("karaokeCheckbox").checked = karaokeChecked;
+      document.getElementById("karaokeCheckbox").addEventListener("change", function () {
+        localStorage.setItem("karaokeCheckbox", this.checked);
+      });
+    };
+
+    function updateConnectUI(connected) {
+      const input = document.getElementById('userCodeInput');
+      const btn = document.getElementById('connectBtn');
+      const logout = document.getElementById('logoutBtn');
+
+      if (connected) {
+        input.disabled = true;
+        btn.innerText = "🔒 Đã kết nối";
+        btn.disabled = true;
+        btn.style.backgroundColor = "#4caf50";
+        logout.style.display = "inline-block";
+      } else {
+        input.disabled = false;
+        btn.innerText = "✅ Kết nối";
+        btn.disabled = false;
+        btn.style.backgroundColor = "";
+        logout.style.display = "none";
+      }
+    }
+
+    function connectRoom(storedCode = null) {
+      const code = storedCode || document.getElementById('userCodeInput').value.trim();
+      if (!/^\d{5}$/.test(code)) {
+        showToast("⚠️ Mã không hợp lệ (5 chữ số)");
+        return;
+      }
+      currentRoom = code;
+      localStorage.setItem("lastRoom", code);
+      updateConnectUI(true);
+      showToast("🔗 Đã kết nối mã " + code);
+      loadPlaylist();
+    }
+
+    function clearRoomCode() {
+      localStorage.removeItem("lastRoom");
+      currentRoom = null;
+      document.getElementById('userCodeInput').value = '';
+      updateConnectUI(false);
+      showToast("🚪 Đã đăng xuất");
+      document.getElementById('playlist').innerHTML = ''; // Xóa danh sách chờ
+    }
+    
+    function openTVLink() {
+        // Dùng link mẫu của remote1.html vì không có link thực tế của player.html
+        window.open(
+          "https://script.google.com/macros/s/AKfycbygCsBzTzqIlFljm1x453PaygverEed84GTcC1ArpocMB0j-D87m3hZ3DKn58iZilwJ/exec?page=player",
+          "_blank"
+        );
+    }
+
+    // --- ĐIỀU KHIỂN & PLAYLIST ---
+    function sendCommand(cmd) {
+      if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
+      db.ref(`rooms/${currentRoom}/command`).set({
+        type: cmd,
+        time: Date.now()
+      });
+      showToast(cmd);
+    }
+    
+    function clearPlaylist() {
+      if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
+      if(confirm("XÓA HẾT HÀNG ĐỢI?")) {
+        db.ref(`rooms/${currentRoom}/playlist`).remove();
+        showToast("🗑 Đã xóa hàng đợi");
+      }
+    }
+
+    function loadPlaylist() {
+      if (!currentRoom) return;
+      const listRef = db.ref(`rooms/${currentRoom}/playlist`).orderByChild('timestamp');
+      
+      listRef.on('value', (snapshot) => {
+        const container = document.getElementById("playlist");
+        container.innerHTML = "";
+        const songs = [];
+        snapshot.forEach(child => {
+          songs.push({ key: child.key, ...child.val() });
+        });
+        
+        songs.sort((a, b) => a.timestamp - b.timestamp);
+
+        songs.forEach((s, index) => {
+          const shortTitle = s.title.slice(0, 30);
+          const li = document.createElement("li");
+          li.className = "playlist-item";
+          li.setAttribute("data-key", s.key); // Dùng key để reorder
+
+          const titleSpan = document.createElement("span");
+          const prefix = index === 0 ? "▶️ Đang phát: " : `${index + 1}. `;
+          titleSpan.textContent = `${prefix}${shortTitle}`;
+
+          const removeBtn = document.createElement("button");
+          removeBtn.textContent = "🗑";
+          removeBtn.onclick = () => removeSong(s.key);
+
+          li.appendChild(titleSpan);
+          li.appendChild(removeBtn);
+          container.appendChild(li);
+        });
+        
+        // Kích hoạt SortableJS sau khi render
+        if (container._sortableInstance) container._sortableInstance.destroy();
+        container._sortableInstance = Sortable.create(container, {
+          animation: 150,
+          onEnd: function (evt) {
+            const keysOrder = Array.from(container.children).map(el => el.getAttribute("data-key"));
+            reorderPlaylist(keysOrder);
+          }
+        });
+      });
+    }
+
+    function removeSong(key) {
+      if (!currentRoom) return;
+      db.ref(`rooms/${currentRoom}/playlist/${key}`).remove();
+      showToast("🗑 Đã xóa bài");
+    }
+    
+    function reorderPlaylist(keysOrder) {
+      if (!currentRoom) return;
+      // Dựa vào keysOrder, cập nhật timestamp để Firebase tự sắp xếp lại
+      // Lưu ý: Bài đang phát (keysOrder[0]) không nên thay đổi timestamp
+      
+      const updates = {};
+      const baseTimestamp = Date.now(); 
+      
+      // Bỏ qua bài đầu tiên đang phát
+      for (let i = 1; i < keysOrder.length; i++) {
+          const key = keysOrder[i];
+          // Cập nhật timestamp cho các bài còn lại theo vị trí mới
+          updates[`rooms/${currentRoom}/playlist/${key}/timestamp`] = baseTimestamp + i;
+      }
+      
+      db.ref().update(updates)
+        .then(() => showToast("✅ Đã cập nhật thứ tự"))
+        .catch(error => showToast("Lỗi cập nhật thứ tự: " + error.message));
+    }
+
+
+    // --- TÌM KIẾM & THÊM BÀI HÁT ---
+    async function searchYouTube() {
+      const karaokeChecked = document.getElementById("karaokeCheckbox").checked;
+      let query = document.getElementById('searchInput').value.trim();
+      
+      document.getElementById('searchResults').innerHTML = ''; // Xóa kết quả cũ
+
+      if (!query) return;
+      if (karaokeChecked) query += " karaoke";
+
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`;
+      
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        renderSearchResults(data.items);
+      } catch (e) {
+        showToast("⚠️ Lỗi tìm kiếm: " + e.message);
+      }
+    }
+
+    function renderSearchResults(videos) {
+      const container = document.getElementById('searchResults');
+      if(!videos) return;
+
+      videos.forEach(item => {
+        const vid = item.id.videoId;
+        const title = item.snippet.title;
+        const img = item.snippet.thumbnails.medium.url;
+
+        const videoDiv = document.createElement('div');
+        videoDiv.className = 'video-item';
+
+        const safeTitle = encodeURIComponent(title);
+
+        videoDiv.innerHTML = `
+          <img src="${img}">
+          <div class="video-info">
+            <div class="video-title">${title}</div>
+            <div class="button-group">
+              <button onclick="submitSong('${vid}', decodeURIComponent('${safeTitle}'))">Gửi bài</button>
+              <button class="btn-no" style="background:#f39c12; padding:10px; font-size:16px;" onclick="submitPrioritySong('${vid}', decodeURIComponent('${safeTitle}'))">Ưu tiên</button>
+            </div>
+            <div class="button-group" style="margin-top: 10px;">
+              <button style="background:#007bff;" onclick="submitPrioritySong2('${vid}', decodeURIComponent('${safeTitle}'))">Play Now</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(videoDiv);
+      });
+    }
+
+    function submitSong(videoId, title) {
+      if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
+      const song = { videoId: videoId, title: title, timestamp: Date.now() };
+      db.ref(`rooms/${currentRoom}/playlist`).push(song);
+      showToast("✅ Đã gửi bài");
+    }
+
+    function submitPrioritySong(videoId, title) {
+      if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
+      // Gửi bài với timestamp rất thấp nhưng lớn hơn 0, để xếp sau bài đang phát
+      const song = { videoId: videoId, title: title, timestamp: 2 }; 
+      db.ref(`rooms/${currentRoom}/playlist`).push(song);
+      showToast("✅ Đã gửi ưu tiên");
+    }
+    
+    function submitPrioritySong2(videoId, title) {
+      if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
+      // Gửi bài với timestamp = 1, để xếp lên ngay vị trí thứ 2 (bài đang phát có timestamp 0)
+      const song = { videoId: videoId, title: title, timestamp: 1 };
+      db.ref(`rooms/${currentRoom}/playlist`).push(song);
+      showToast("✅ Đã gửi Play Now");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'show';
+      setTimeout(() => toast.className = '', 2000);
+    }
+  </script>
+</body>
+</html>
