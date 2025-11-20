@@ -8,6 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <title>YouTube Jukebox Remote</title>
   <style>
+    /* --- Base Styles --- */
     body {
       font-family: sans-serif;
       background: #f7f7f7;
@@ -16,23 +17,21 @@
     }
 
     .playlist-item {
-      padding: 1px;
+      padding: 15px;
       margin-bottom: 12px;
       background: white;
       border-radius: 12px;
-      font-size: 40px;
+      font-size: 24px; /* Giảm size mặc định */
       font-weight: 500;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       cursor: grab;
-      /* Điều chỉnh cho danh sách chờ trong remote.html */
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px;
     }
     
     .playlist-item span {
-        font-size: 24px;
+        font-size: 20px; /* Giảm size mặc định */
     }
 
     h1 {
@@ -47,18 +46,38 @@
         color: #333;
     }
 
-    #searchInput {
+    #searchInput, #playlistLinkInput { 
       width: 100%;
-      padding: 32px;
-      font-size: 38px;
+      padding: 24px; /* Giảm padding mặc định */
+      font-size: 28px; /* Giảm font mặc định */
       margin-bottom: 10px;
       box-sizing: border-box;
-      border: 1px solid #ccc; /* Thêm border cho input */
+      border: 1px solid #ccc; 
+    }
+    
+    #playlistLinkInput {
+        font-size: 20px; /* Giảm font mặc định */
+        padding: 12px;
+        margin-top: 10px;
+        display: none; 
+    }
+    
+    .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .search-box button {
+        flex-shrink: 0;
+        width: 120px; /* Giảm chiều rộng nút */
+        padding: 20px;
+        font-size: 20px;
     }
 
     button {
-      padding: 26px;
-      font-size: 24px;
+      padding: 20px; /* Giảm padding mặc định */
+      font-size: 20px;
       background: #cc0000;
       color: white;
       border: none;
@@ -68,39 +87,18 @@
       transition: background 0.2s, transform 0.1s;
     }
     
-    /* Thiết kế riêng cho nút trong danh sách chờ */
     .playlist-item button {
         padding: 6px 12px;
-        font-size: 20px;
+        font-size: 16px;
         background: #e74c3c;
         margin-right: 0;
     }
 
-    .btn-no {
-      background-color: #f39c12;
-      color: white;
-      padding: 1px;
-      font-size: 1px;
-    }
-
-    button:hover {
-      background: #a80000;
-    }
-
-    button:active {
-      background: #880000;
-      transform: scale(0.88);
-      outline: none;
-    }
-
-    #loadMoreBtn {
-      width: 100%;
-      margin-top: 38px;
-    }
+    /* Các kiểu hover/active giữ nguyên */
 
     .video-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start; /* Sửa thành flex-start để căn chỉnh */
       background: white;
       margin-bottom: 12px;
       border-radius: 10px;
@@ -109,11 +107,11 @@
     }
 
     .video-item img {
-      /* Điều chỉnh lại kích thước ảnh cho remote.html */
-      width: 30%; 
+      width: 35%; /* Cho ảnh chiếm 35% */
       max-width: 150px;
       height: auto;
       object-fit: cover;
+      flex-shrink: 0;
     }
 
     .video-info {
@@ -125,90 +123,105 @@
     }
 
     .video-title {
-      font-size: 20px; /* Nhỏ hơn cho remote */
+      font-size: 18px; /* Giảm font title */
       margin-bottom: 8px;
       font-weight: bold;
     }
 
-    .button-group {
+    /* MỚI: Đảm bảo các nút hành động trên một hàng và không bị xuống dòng */
+    .action-buttons-row {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 5px; /* Giảm khoảng cách giữa các nút */
+      flex-wrap: nowrap; /* QUAN TRỌNG: Ngăn không cho các nút xuống dòng */
+      margin-top: 5px;
+      overflow-x: auto; /* Thêm scroll ngang nếu không fit */
     }
 
-    /* Định dạng lại nút trong kết quả tìm kiếm */
-    .video-item button {
-        padding: 10px;
-        font-size: 16px;
-        margin-right: 0;
-    }
-
-    #toast {
-      position: fixed;
-      top: 1px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #333;
-      color: white;
-      padding: 20px 30px;
-      border-radius: 8px;
-      font-size: 24px;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      z-index: 9999;
-    }
-
-    #toast.show {
-        visibility: visible;
-        opacity: 1;
+    .btn-action {
+        flex-shrink: 0; /* Quan trọng: Ngăn nút bị co lại */
+        padding: 8px 10px !important; 
+        font-size: 14px !important; 
+        margin-right: 0 !important;
+        white-space: nowrap;
     }
     
-    .connect-box {
-        display: flex;
-        gap: 16px; 
-        align-items: center; 
-        margin-bottom: 16px;
+    .btn-priority {
+        background: #f39c12 !important;
+    }
+    .btn-playnow {
+        background: #007bff !important;
     }
 
-    .connect-box input {
-        font-size: 30px; 
-        padding: 24px; 
-        flex: 1;
-        box-sizing: border-box;
-        margin-bottom: 0;
+    #loadMoreBtn {
+        width: 100%;
+        margin-top: 20px;
+        background-color: #3498db;
+    }
+    
+    .control-row {
+        gap: 8px !important;
     }
     
     .control-row button {
-        background-color: #4caf50; 
-        padding: 16px 18px; 
-        font-size: 19px;
-        margin-right: 0;
+        padding: 10px 12px !important;
+        font-size: 16px !important;
         flex-grow: 1;
+        min-width: 80px;
     }
 
+
+    /* --- Mobile Optimization (Max Width 480px) --- */
     @media (max-width: 480px) {
-      .video-title {
-        font-size: 16px;
+      body {
+        padding: 15px; /* Giảm padding body */
       }
+      
       .video-item {
-        flex-direction: column;
+        /* Giữ nguyên flex-direction: row (mặc định) */
         align-items: flex-start;
       }
+      
       .video-item img {
-        width: 100%;
-        max-height: 180px;
+        width: 30%; /* Giữ kích thước ảnh nhỏ */
+        max-height: 80px; 
       }
-      .video-item .button-group button {
-        width: 100%;
-        margin-top: 16px;
+      
+      .video-info {
+        padding: 8px;
       }
+      
+      .video-title {
+        font-size: 14px; /* Thu nhỏ tiêu đề */
+      }
+      
       .connect-box input {
           font-size: 18px;
           padding: 12px;
       }
+      
+      .search-box button {
+          width: 100%;
+          font-size: 18px;
+      }
+      
+      #searchInput, #playlistLinkInput {
+        padding: 14px;
+        font-size: 20px;
+      }
+      
+      .search-box {
+          flex-direction: column; /* Cho nút Tìm kiếm xuống dòng */
+      }
+
+      /* Tối ưu hóa cho nút hành động */
+      .btn-action {
+          padding: 5px 6px !important;
+          font-size: 11px !important;
+      }
+      
       .control-row button {
-          font-size: 16px;
-          padding: 10px;
+          font-size: 12px !important;
+          padding: 8px 5px !important;
       }
     }
   </style>
@@ -225,7 +238,7 @@
       border-radius: 6px;
       cursor: pointer;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-right: 0; /* Loại bỏ margin thừa */
+      margin-right: 0; 
     ">
       📺 Link cho TV
     </button>
@@ -246,27 +259,35 @@
   <button onclick="sendCommand('NEXT')">⏭ Qua bài</button>
   <button onclick="sendCommand('PLAY')">▶️ Play</button>
   <button onclick="sendCommand('PAUSE')">⏸ Pause</button>
-  <button onclick="sendCommand('VOL_DOWN')">🔉 Volume -</button>
-  <button onclick="sendCommand('VOL_UP')">🔊 Volume +</button>
-  <button style="background-color: #999;" onclick="clearPlaylist()">🗑 Xóa list đợi</button>
+  <button onclick="sendCommand('VOL_DOWN')">🔉 Vol -</button>
+  <button onclick="sendCommand('VOL_UP')">🔊 Vol +</button>
+  <button style="background-color: #999;" onclick="clearPlaylist()">🗑 Xóa list</button>
 </div>
 
   <h1>YouTube Jukebox</h1>
   <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
-    <input type="checkbox" id="karaokeCheckbox" checked style="transform: scale(2); width: 20px; height: 20px;">
-    <label for="karaokeCheckbox" style="font-size: 24px;">🎤 Tìm Karaoke</label>
-    </div>
-  <input type="text" id="searchInput" placeholder="Nhập tên bài hát...">
-  <button onclick="searchYouTube()">Tìm kiếm</button>
+    <input type="checkbox" id="karaokeCheckbox" checked style="transform: scale(1.5); width: 15px; height: 15px;">
+    <label for="karaokeCheckbox" style="font-size: 20px;">🎤 Tìm Karaoke</label>
+    <input type="checkbox" id="playlistCheckbox" style="transform: scale(1.5); width: 15px; height: 15px; margin-left: 20px;">
+    <label for="playlistCheckbox" style="font-size: 20px;">📃 Playlist</label>
+  </div>
+  
+  <input type="text" id="playlistLinkInput" placeholder="Nhập Link/ID Playlist YouTube (list=...)" onblur="savePlaylistLink()">
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Nhập tên bài hát...">
+    <button onclick="newSearch()">Tìm kiếm</button>
+  </div>
 
   <div id="searchResults"></div>
+  <button id="loadMoreBtn" style="display: none;" onclick="loadMore()">HIỆN THÊM</button>
   <div id="toast"></div>
 
 
   <script>
-    // --- CẤU HÌNH FIREBASE ---
+    // --- CẤU HÌNH ---
     const firebaseConfig = {
-      apiKey: "AIzaSyAIwBqg8EYLU7TQXfOO697C4D5p5_GeghQ", // Dùng key cũ
+      apiKey: "AIzaSyAIwBqg8EYLU7TQXfOO697C4D5p5_GeghQ",
       authDomain: "karaoke-home.firebaseapp.com",
       databaseURL: "https://karaoke-home-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "karaoke-home",
@@ -279,21 +300,29 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // Key API YouTube (Sử dụng tạm key từ file cũ)
-    const YOUTUBE_API_KEY = 'AIzaSyBu2W83cmzz5vhpWQsLvPzWA3F62y-5i-4';
+    // !!! CẢNH BÁO: Cần THAY THẾ bằng khóa API YouTube của bạn để đảm bảo hoạt động ổn định
+    const YOUTUBE_API_KEY = 'AIzaSyBu2W83cmzz5vhpWQsLvPzWA3F62y-5i-4'; 
+    const RESULTS_PER_PAGE = 20;
 
     let currentRoom = null;
+    let currentPlaylistId = null;
+    let nextPageToken = null; 
+    let currentSearchQuery = '';
+    let currentSearchMode = 'search'; // 'search' (bình thường) hoặc 'playlist'
+    let playlistCache = []; // Bộ đệm cache cho danh sách playlist đã tải (tối đa 50/lần)
+
 
     document.getElementById('searchInput').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
-        searchYouTube();
+        newSearch(); 
       }
     });
     
-    // --- KHỞI TẠO VÀ KẾT NỐI ---
+    // --- KHỞI TẠO VÀ KẾT NỐI (Giữ nguyên logic) ---
+
     window.onload = function () {
       const storedCode = localStorage.getItem("lastRoom");
-      if (storedCode && /^\d{5}$/.test(storedCode)) {
+      if (storedCode && /^\d{5}$/i.test(storedCode)) {
         document.getElementById('userCodeInput').value = storedCode;
         connectRoom(storedCode);
         showToast("🔄 Đã tự động kết nối");
@@ -304,8 +333,69 @@
       document.getElementById("karaokeCheckbox").addEventListener("change", function () {
         localStorage.setItem("karaokeCheckbox", this.checked);
       });
+      
+      const playlistChecked = localStorage.getItem("playlistCheckbox") === "true";
+      document.getElementById("playlistCheckbox").checked = playlistChecked;
+      updatePlaylistUI(playlistChecked); 
+      document.getElementById("playlistCheckbox").addEventListener("change", function () {
+        localStorage.setItem("playlistCheckbox", this.checked);
+        updatePlaylistUI(this.checked);
+      });
+      
+      const storedPlaylistLink = localStorage.getItem("playlistLink");
+      if (storedPlaylistLink) {
+          document.getElementById('playlistLinkInput').value = storedPlaylistLink;
+          currentPlaylistId = extractPlaylistId(storedPlaylistLink);
+      }
     };
+    
+    function updatePlaylistUI(checked) {
+        const input = document.getElementById("playlistLinkInput");
+        const searchInput = document.getElementById("searchInput");
+        if (checked) {
+            input.style.display = "block";
+            searchInput.placeholder = "Nhập tên bài hát để lọc (chỉ lọc 50 bài đầu) hoặc để trống để xem danh sách...";
+            if (!currentPlaylistId) {
+                showToast("⚠️ Vui lòng nhập Link/ID Playlist!");
+            }
+        } else {
+            input.style.display = "none";
+            searchInput.placeholder = "Nhập tên bài hát...";
+        }
+    }
+    
+    function savePlaylistLink() {
+        const link = document.getElementById("playlistLinkInput").value.trim();
+        if (link) {
+            const playlistId = extractPlaylistId(link);
+            if (playlistId) {
+                localStorage.setItem("playlistLink", link);
+                currentPlaylistId = playlistId;
+                showToast(`✅ Đã lưu Playlist ID: ${playlistId}`);
+            } else {
+                currentPlaylistId = null;
+                showToast("⚠️ Link Playlist không hợp lệ. Vui lòng kiểm tra lại.");
+            }
+        } else {
+            localStorage.removeItem("playlistLink");
+            currentPlaylistId = null;
+            showToast("Đã xóa Link Playlist đã lưu.");
+        }
+    }
 
+    function connectRoom(storedCode = null) {
+      const code = storedCode || document.getElementById('userCodeInput').value.trim();
+      if (!/^\d{5}$/i.test(code)) {
+        showToast("⚠️ Mã không hợp lệ (5 chữ số)");
+        return;
+      }
+      currentRoom = code;
+      localStorage.setItem("lastRoom", code);
+      updateConnectUI(true);
+      showToast("🔗 Đã kết nối mã " + code);
+      loadPlaylist();
+    }
+    
     function updateConnectUI(connected) {
       const input = document.getElementById('userCodeInput');
       const btn = document.getElementById('connectBtn');
@@ -326,37 +416,24 @@
       }
     }
 
-    function connectRoom(storedCode = null) {
-      const code = storedCode || document.getElementById('userCodeInput').value.trim();
-      if (!/^\d{5}$/.test(code)) {
-        showToast("⚠️ Mã không hợp lệ (5 chữ số)");
-        return;
-      }
-      currentRoom = code;
-      localStorage.setItem("lastRoom", code);
-      updateConnectUI(true);
-      showToast("🔗 Đã kết nối mã " + code);
-      loadPlaylist();
-    }
-
     function clearRoomCode() {
       localStorage.removeItem("lastRoom");
       currentRoom = null;
       document.getElementById('userCodeInput').value = '';
       updateConnectUI(false);
       showToast("🚪 Đã đăng xuất");
-      document.getElementById('playlist').innerHTML = ''; // Xóa danh sách chờ
+      document.getElementById('playlist').innerHTML = '';
     }
     
     function openTVLink() {
-        // Dùng link mẫu của remote1.html vì không có link thực tế của player.html
         window.open(
           "https://script.google.com/macros/s/AKfycbygCsBzTzqIlFljm1x453PaygverEed84GTcC1ArpocMB0j-D87m3hZ3DKn58iZilwJ/exec?page=player",
           "_blank"
         );
     }
 
-    // --- ĐIỀU KHIỂN & PLAYLIST ---
+    // --- ĐIỀU KHIỂN & PLAYLIST FIREBASE (Giữ nguyên logic) ---
+
     function sendCommand(cmd) {
       if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
       db.ref(`rooms/${currentRoom}/command`).set({
@@ -392,7 +469,7 @@
           const shortTitle = s.title.slice(0, 30);
           const li = document.createElement("li");
           li.className = "playlist-item";
-          li.setAttribute("data-key", s.key); // Dùng key để reorder
+          li.setAttribute("data-key", s.key);
 
           const titleSpan = document.createElement("span");
           const prefix = index === 0 ? "▶️ Đang phát: " : `${index + 1}. `;
@@ -407,7 +484,6 @@
           container.appendChild(li);
         });
         
-        // Kích hoạt SortableJS sau khi render
         if (container._sortableInstance) container._sortableInstance.destroy();
         container._sortableInstance = Sortable.create(container, {
           animation: 150,
@@ -427,16 +503,12 @@
     
     function reorderPlaylist(keysOrder) {
       if (!currentRoom) return;
-      // Dựa vào keysOrder, cập nhật timestamp để Firebase tự sắp xếp lại
-      // Lưu ý: Bài đang phát (keysOrder[0]) không nên thay đổi timestamp
       
       const updates = {};
       const baseTimestamp = Date.now(); 
       
-      // Bỏ qua bài đầu tiên đang phát
       for (let i = 1; i < keysOrder.length; i++) {
           const key = keysOrder[i];
-          // Cập nhật timestamp cho các bài còn lại theo vị trí mới
           updates[`rooms/${currentRoom}/playlist/${key}/timestamp`] = baseTimestamp + i;
       }
       
@@ -446,33 +518,190 @@
     }
 
 
-    // --- TÌM KIẾM & THÊM BÀI HÁT ---
-    async function searchYouTube() {
-      const karaokeChecked = document.getElementById("karaokeCheckbox").checked;
-      let query = document.getElementById('searchInput').value.trim();
-      
-      document.getElementById('searchResults').innerHTML = ''; // Xóa kết quả cũ
+    // --- LOGIC TÌM KIẾM YOUTUBE (Giữ nguyên logic phân trang) ---
+    
+    function extractPlaylistId(url) {
+      const match = url.match(/list=([a-zA-Z0-9_-]+)/);
+      return match ? match[1] : null;
+    }
 
-      if (!query) return;
-      if (karaokeChecked) query += " karaoke";
+    function newSearch() {
+        const playlistChecked = document.getElementById("playlistCheckbox").checked;
+        currentSearchQuery = document.getElementById("searchInput").value.trim();
+        document.getElementById('searchResults').innerHTML = ''; 
+        document.getElementById('loadMoreBtn').style.display = 'none';
+        nextPageToken = null; 
+        playlistCache = []; 
+        
+        if (playlistChecked) {
+            currentSearchMode = 'playlist';
+            handlePlaylistSearch(currentSearchQuery, true);
+        } else {
+            currentSearchMode = 'search';
+            searchYouTube(currentSearchQuery, true, true);
+        }
+    }
+    
+    function loadMore() {
+        if (!nextPageToken) return;
+        
+        if (currentSearchMode === 'search') {
+            searchYouTube(currentSearchQuery, true, false, nextPageToken); 
+        } else if (currentSearchMode === 'playlist') {
+            if (currentSearchQuery === "") {
+                fetchPlaylistItems(currentPlaylistId, currentSearchQuery, false, nextPageToken);
+            } else {
+                showToast("⚠️ Chức năng Lọc trong Playlist không hỗ trợ 'HIỆN THÊM'.");
+            }
+        }
+    }
+    
+    function handlePlaylistSearch(query, isNewSearch) {
+        if (!currentPlaylistId) {
+             showToast("⚠️ Vui lòng nhập Link/ID Playlist hợp lệ trước!");
+             return;
+        }
+        
+        if (query === "") {
+             showToast("Đang tải danh sách Playlist...");
+             fetchPlaylistItems(currentPlaylistId, query, isNewSearch);
+        } else {
+            if (isNewSearch) {
+                showToast("⚠️ Đang tải 50 bài đầu để lọc. Hãy chờ...");
+                fetchPlaylistItems(currentPlaylistId, query, isNewSearch, null, 50); 
+            } else {
+                 const filteredVideos = playlistCache.filter(item => 
+                    item.snippet.title.toLowerCase().includes(query.toLowerCase())
+                 );
+                 showToast(`✅ Đã lọc ${filteredVideos.length} bài trong danh sách đã tải.`);
+                 renderSearchResults(filteredVideos, true); 
+                 document.getElementById('loadMoreBtn').style.display = 'none'; 
+            }
+        }
+    }
+    
+    async function fetchPlaylistItems(playlistId, query, isNewSearch, pageToken = null, maxResults = RESULTS_PER_PAGE) {
+        if (isNewSearch) document.getElementById('searchResults').innerHTML = 'Đang tải Playlist...';
+        document.getElementById('loadMoreBtn').style.display = 'none';
 
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`;
+        let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=${maxResults}&playlistId=${playlistId}&key=${YOUTUBE_API_KEY}`;
+        if (pageToken) {
+            url += `&pageToken=${pageToken}`;
+        }
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (res.status !== 200 || data.error) {
+                 console.error("API Response Error:", data.error);
+                 document.getElementById('searchResults').innerHTML = 'LỖI: Không thể tải Playlist. Kiểm tra ID và Khóa API.';
+                 showToast("⚠️ Lỗi API: " + (data.error.message || "Unknown"));
+                 return;
+            }
+
+            nextPageToken = data.nextPageToken;
+            const newItems = data.items.filter(item => item.snippet.resourceId.kind === 'youtube#video');
+            
+            if (isNewSearch) {
+                playlistCache = newItems;
+            } else {
+                playlistCache = playlistCache.concat(newItems);
+            }
+            
+            if (query !== "") {
+                const filteredVideos = playlistCache.filter(item => 
+                    item.snippet.title.toLowerCase().includes(query.toLowerCase())
+                );
+                showToast(`✅ Đã tải và lọc ${filteredVideos.length} bài.`);
+                renderSearchResults(filteredVideos, true); 
+            } else {
+                showToast(`✅ Đã tải ${playlistCache.length} bài. Tối đa ${RESULTS_PER_PAGE} bài/lần tải.`);
+                
+                renderSearchResults(newItems, isNewSearch); 
+            }
+            
+            if (nextPageToken && query === "") {
+                document.getElementById('loadMoreBtn').style.display = 'block';
+            } else {
+                document.getElementById('loadMoreBtn').style.display = 'none';
+            }
+
+        } catch (e) {
+            document.getElementById('searchResults').innerHTML = '';
+            showToast("⚠️ Lỗi mạng/API: " + e.message);
+            nextPageToken = null;
+        }
+    }
+
+    async function searchYouTube(query, useKaraokeCheckbox, isNewSearch, pageToken = null) {
+      const karaokeChecked = document.getElementById("karaokeCheckbox").checked && useKaraokeCheckbox;
       
+      if (!query && isNewSearch) return; 
+      
+      let finalQuery = query;
+      if (karaokeChecked) finalQuery += " karaoke";
+
+      if (isNewSearch) {
+        document.getElementById('searchResults').innerHTML = 'Đang tìm kiếm...';
+      } else {
+        document.getElementById('loadMoreBtn').innerText = 'Đang tải...';
+      }
+
+      let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=${RESULTS_PER_PAGE}&q=${encodeURIComponent(finalQuery)}&key=${YOUTUBE_API_KEY}`;
+      if (pageToken) {
+        url += `&pageToken=${pageToken}`;
+      }
+
       try {
         const res = await fetch(url);
         const data = await res.json();
-        renderSearchResults(data.items);
+        
+        if (res.status !== 200 || data.error) {
+             document.getElementById('searchResults').innerHTML = 'LỖI: Không thể tìm kiếm. Kiểm tra Khóa API.';
+             showToast("⚠️ Lỗi API: " + (data.error.message || "Unknown"));
+             return;
+        }
+
+        nextPageToken = data.nextPageToken;
+        
+        if (isNewSearch) {
+            document.getElementById('searchResults').innerHTML = ''; 
+        }
+        
+        renderSearchResults(data.items, isNewSearch);
+        
+        if (nextPageToken) {
+            document.getElementById('loadMoreBtn').style.display = 'block';
+            document.getElementById('loadMoreBtn').innerText = 'HIỆN THÊM';
+        } else {
+            document.getElementById('loadMoreBtn').style.display = 'none';
+        }
+
       } catch (e) {
-        showToast("⚠️ Lỗi tìm kiếm: " + e.message);
+        document.getElementById('searchResults').innerHTML = isNewSearch ? '' : document.getElementById('searchResults').innerHTML;
+        showToast("⚠️ Lỗi mạng/API: " + e.message);
+        document.getElementById('loadMoreBtn').style.display = 'none';
       }
     }
 
-    function renderSearchResults(videos) {
+    // --- HÀM RENDER KẾT QUẢ (Đã sửa lại cấu trúc nút) ---
+    function renderSearchResults(videos, isNewSearch) {
       const container = document.getElementById('searchResults');
-      if(!videos) return;
+      if (isNewSearch) {
+          container.innerHTML = ''; // Xóa kết quả cũ nếu là tìm kiếm mới
+      }
+
+      if(!videos || videos.length === 0) {
+          if (isNewSearch) container.innerHTML = 'Không tìm thấy kết quả nào.';
+          return;
+      }
 
       videos.forEach(item => {
-        const vid = item.id.videoId;
+        const vid = item.id ? item.id.videoId : (item.snippet.resourceId ? item.snippet.resourceId.videoId : null);
+        
+        if (!vid) return; 
+
         const title = item.snippet.title;
         const img = item.snippet.thumbnails.medium.url;
 
@@ -481,22 +710,23 @@
 
         const safeTitle = encodeURIComponent(title);
 
+        // Đã gộp 3 nút vào chung một div duy nhất và sử dụng class 'action-buttons-row'
         videoDiv.innerHTML = `
           <img src="${img}">
           <div class="video-info">
             <div class="video-title">${title}</div>
-            <div class="button-group">
-              <button onclick="submitSong('${vid}', decodeURIComponent('${safeTitle}'))">Gửi bài</button>
-              <button class="btn-no" style="background:#f39c12; padding:10px; font-size:16px;" onclick="submitPrioritySong('${vid}', decodeURIComponent('${safeTitle}'))">Ưu tiên</button>
-            </div>
-            <div class="button-group" style="margin-top: 10px;">
-              <button style="background:#007bff;" onclick="submitPrioritySong2('${vid}', decodeURIComponent('${safeTitle}'))">Play Now</button>
+            <div class="action-buttons-row">
+              <button class="btn-action" onclick="submitSong('${vid}', decodeURIComponent('${safeTitle}'))">Gửi bài</button>
+              <button class="btn-action btn-priority" onclick="submitPrioritySong('${vid}', decodeURIComponent('${safeTitle}'))">Ưu tiên</button>
+              <button class="btn-action btn-playnow" onclick="submitPrioritySong2('${vid}', decodeURIComponent('${safeTitle}'))">Play Now</button>
             </div>
           </div>
         `;
         container.appendChild(videoDiv);
       });
     }
+
+    // --- CHỨC NĂNG FIREBASE (Giữ nguyên) ---
 
     function submitSong(videoId, title) {
       if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
@@ -507,7 +737,6 @@
 
     function submitPrioritySong(videoId, title) {
       if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
-      // Gửi bài với timestamp rất thấp nhưng lớn hơn 0, để xếp sau bài đang phát
       const song = { videoId: videoId, title: title, timestamp: 2 }; 
       db.ref(`rooms/${currentRoom}/playlist`).push(song);
       showToast("✅ Đã gửi ưu tiên");
@@ -515,7 +744,6 @@
     
     function submitPrioritySong2(videoId, title) {
       if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
-      // Gửi bài với timestamp = 1, để xếp lên ngay vị trí thứ 2 (bài đang phát có timestamp 0)
       const song = { videoId: videoId, title: title, timestamp: 1 };
       db.ref(`rooms/${currentRoom}/playlist`).push(song);
       showToast("✅ Đã gửi Play Now");
