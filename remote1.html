@@ -16,12 +16,13 @@
       margin: 0;
     }
 
+    /* Đã sửa: Tối ưu hoá Playlist Item */
     .playlist-item {
-      padding: 15px;
+      padding: 10px 15px; /* Giảm padding */
       margin-bottom: 12px;
       background: white;
       border-radius: 12px;
-      font-size: 24px; /* Giảm size mặc định */
+      font-size: 20px; 
       font-weight: 500;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       cursor: grab;
@@ -30,8 +31,14 @@
       align-items: center;
     }
     
+    /* Đã sửa: Buộc tiêu đề Playlist chỉ 1 dòng và cắt bớt */
     .playlist-item span {
-        font-size: 20px; /* Giảm size mặc định */
+        font-size: 18px; 
+        flex-grow: 1; 
+        white-space: nowrap; /* Ngăn xuống dòng */
+        overflow: hidden; /* Ẩn nội dung thừa */
+        text-overflow: ellipsis; /* Thêm dấu ... */
+        margin-right: 10px; /* Khoảng cách với nút xóa */
     }
 
     h1 {
@@ -48,15 +55,15 @@
 
     #searchInput, #playlistLinkInput { 
       width: 100%;
-      padding: 24px; /* Giảm padding mặc định */
-      font-size: 28px; /* Giảm font mặc định */
+      padding: 24px; 
+      font-size: 28px; 
       margin-bottom: 10px;
       box-sizing: border-box;
       border: 1px solid #ccc; 
     }
     
     #playlistLinkInput {
-        font-size: 20px; /* Giảm font mặc định */
+        font-size: 20px; 
         padding: 12px;
         margin-top: 10px;
         display: none; 
@@ -70,13 +77,13 @@
     
     .search-box button {
         flex-shrink: 0;
-        width: 120px; /* Giảm chiều rộng nút */
+        width: 120px; 
         padding: 20px;
         font-size: 20px;
     }
 
     button {
-      padding: 20px; /* Giảm padding mặc định */
+      padding: 20px; 
       font-size: 20px;
       background: #cc0000;
       color: white;
@@ -92,13 +99,39 @@
         font-size: 16px;
         background: #e74c3c;
         margin-right: 0;
+        flex-shrink: 0; /* Ngăn nút xóa bị co lại */
     }
 
-    /* Các kiểu hover/active giữ nguyên */
+    /* Đã sửa: Tối ưu hoá Connect Box */
+    .connect-box {
+        display: flex;
+        gap: 10px; /* Giảm khoảng cách */
+        align-items: center; 
+        margin-bottom: 16px;
+        flex-wrap: nowrap; /* QUAN TRỌNG: Ngăn các phần tử xuống dòng */
+        overflow-x: auto; /* Thêm scroll ngang nếu không fit */
+    }
 
+    .connect-box input {
+        font-size: 20px; 
+        padding: 12px; 
+        flex: 1;
+        min-width: 0; 
+        box-sizing: border-box;
+        margin-bottom: 0;
+    }
+
+    .connect-box button {
+        font-size: 14px; 
+        padding: 8px 12px; 
+        width: auto;
+        flex-shrink: 0; /* Ngăn nút co lại */
+        margin-right: 0 !important;
+    }
+    
     .video-item {
       display: flex;
-      align-items: flex-start; /* Sửa thành flex-start để căn chỉnh */
+      align-items: flex-start;
       background: white;
       margin-bottom: 12px;
       border-radius: 10px;
@@ -107,7 +140,7 @@
     }
 
     .video-item img {
-      width: 35%; /* Cho ảnh chiếm 35% */
+      width: 35%; 
       max-width: 150px;
       height: auto;
       object-fit: cover;
@@ -123,22 +156,21 @@
     }
 
     .video-title {
-      font-size: 18px; /* Giảm font title */
+      font-size: 18px; 
       margin-bottom: 8px;
       font-weight: bold;
     }
 
-    /* MỚI: Đảm bảo các nút hành động trên một hàng và không bị xuống dòng */
     .action-buttons-row {
       display: flex;
-      gap: 5px; /* Giảm khoảng cách giữa các nút */
-      flex-wrap: nowrap; /* QUAN TRỌNG: Ngăn không cho các nút xuống dòng */
+      gap: 5px; 
+      flex-wrap: nowrap; 
       margin-top: 5px;
-      overflow-x: auto; /* Thêm scroll ngang nếu không fit */
+      overflow-x: auto; 
     }
 
     .btn-action {
-        flex-shrink: 0; /* Quan trọng: Ngăn nút bị co lại */
+        flex-shrink: 0; 
         padding: 8px 10px !important; 
         font-size: 14px !important; 
         margin-right: 0 !important;
@@ -173,32 +205,35 @@
     /* --- Mobile Optimization (Max Width 480px) --- */
     @media (max-width: 480px) {
       body {
-        padding: 15px; /* Giảm padding body */
+        padding: 15px; 
       }
       
-      .video-item {
-        /* Giữ nguyên flex-direction: row (mặc định) */
-        align-items: flex-start;
-      }
-      
-      .video-item img {
-        width: 30%; /* Giữ kích thước ảnh nhỏ */
-        max-height: 80px; 
-      }
-      
-      .video-info {
-        padding: 8px;
-      }
-      
-      .video-title {
-        font-size: 14px; /* Thu nhỏ tiêu đề */
-      }
-      
+      /* Tối ưu hoá Connect Box trên mobile */
       .connect-box input {
-          font-size: 18px;
-          padding: 12px;
+          font-size: 16px;
+          padding: 10px;
+      }
+      .connect-box button {
+          font-size: 12px;
+          padding: 6px 10px;
       }
       
+      /* Tối ưu hoá Playlist Item trên mobile */
+      .playlist-item {
+          padding: 8px; 
+      }
+      .playlist-item span {
+          font-size: 14px; /* Chữ nhỏ hơn */
+      }
+      .playlist-item button {
+          padding: 4px 8px;
+          font-size: 14px;
+      }
+
+      /* Tối ưu hóa Tìm kiếm/Checkbox */
+      .search-box {
+          flex-direction: column; 
+      }
       .search-box button {
           width: 100%;
           font-size: 18px;
@@ -209,16 +244,20 @@
         font-size: 20px;
       }
       
-      .search-box {
-          flex-direction: column; /* Cho nút Tìm kiếm xuống dòng */
+      /* Tối ưu hoá Kết quả tìm kiếm */
+      .video-item img {
+        width: 30%; 
+        max-height: 80px; 
       }
-
-      /* Tối ưu hóa cho nút hành động */
+      .video-title {
+        font-size: 14px; 
+      }
       .btn-action {
           padding: 5px 6px !important;
           font-size: 11px !important;
       }
       
+      /* Tối ưu hoá Control Row */
       .control-row button {
           font-size: 12px !important;
           padding: 8px 5px !important;
@@ -248,8 +287,8 @@
  
   <div id="userConnectBox" class="connect-box">
     <input id="userCodeInput" type="text" placeholder="Mã từ TV" maxlength="5">
-    <button id="connectBtn" onclick="connectRoom()" style="font-size: 16px; width: auto; margin-right: 0;">✅ Kết nối</button>
-    <button id="logoutBtn" onclick="clearRoomCode()" style="display: none; font-size: 16px; background: #ccc; color: #333; width: auto; margin-right: 0;">🚪Thoát</button>
+    <button id="connectBtn" onclick="connectRoom()" style="width: auto; margin-right: 0;">✅ Kết nối</button>
+    <button id="logoutBtn" onclick="clearRoomCode()" style="display: none; background: #ccc; color: #333; width: auto; margin-right: 0;">🚪Thoát</button>
   </div>
 
   <h2>DANH SÁCH CHỜ</h2>
@@ -308,8 +347,8 @@
     let currentPlaylistId = null;
     let nextPageToken = null; 
     let currentSearchQuery = '';
-    let currentSearchMode = 'search'; // 'search' (bình thường) hoặc 'playlist'
-    let playlistCache = []; // Bộ đệm cache cho danh sách playlist đã tải (tối đa 50/lần)
+    let currentSearchMode = 'search'; 
+    let playlistCache = []; 
 
 
     document.getElementById('searchInput').addEventListener('keypress', function (e) {
@@ -318,7 +357,7 @@
       }
     });
     
-    // --- KHỞI TẠO VÀ KẾT NỐI (Giữ nguyên logic) ---
+    // --- KHỞI TẠO VÀ KẾT NỐI ---
 
     window.onload = function () {
       const storedCode = localStorage.getItem("lastRoom");
@@ -432,7 +471,7 @@
         );
     }
 
-    // --- ĐIỀU KHIỂN & PLAYLIST FIREBASE (Giữ nguyên logic) ---
+    // --- ĐIỀU KHIỂN & PLAYLIST FIREBASE ---
 
     function sendCommand(cmd) {
       if (!currentRoom) return showToast("⚠️ Bạn chưa kết nối!");
@@ -466,7 +505,8 @@
         songs.sort((a, b) => a.timestamp - b.timestamp);
 
         songs.forEach((s, index) => {
-          const shortTitle = s.title.slice(0, 30);
+          // KHÔNG cắt chuỗi ở đây. Việc cắt chuỗi sẽ được thực hiện bởi CSS (text-overflow: ellipsis)
+          const shortTitle = s.title; 
           const li = document.createElement("li");
           li.className = "playlist-item";
           li.setAttribute("data-key", s.key);
@@ -518,7 +558,7 @@
     }
 
 
-    // --- LOGIC TÌM KIẾM YOUTUBE (Giữ nguyên logic phân trang) ---
+    // --- LOGIC TÌM KIẾM YOUTUBE (Giữ nguyên) ---
     
     function extractPlaylistId(url) {
       const match = url.match(/list=([a-zA-Z0-9_-]+)/);
@@ -685,11 +725,11 @@
       }
     }
 
-    // --- HÀM RENDER KẾT QUẢ (Đã sửa lại cấu trúc nút) ---
+    // --- HÀM RENDER KẾT QUẢ ---
     function renderSearchResults(videos, isNewSearch) {
       const container = document.getElementById('searchResults');
       if (isNewSearch) {
-          container.innerHTML = ''; // Xóa kết quả cũ nếu là tìm kiếm mới
+          container.innerHTML = ''; 
       }
 
       if(!videos || videos.length === 0) {
@@ -710,7 +750,6 @@
 
         const safeTitle = encodeURIComponent(title);
 
-        // Đã gộp 3 nút vào chung một div duy nhất và sử dụng class 'action-buttons-row'
         videoDiv.innerHTML = `
           <img src="${img}">
           <div class="video-info">
