@@ -1,0 +1,1 @@
+powershell -command "&{Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class P { [DllImport(\"user32.dll\")] public static extern void mouse_event(int d, int x, int y, int d1, int d2); }'; while($true){ [P]::mouse_event(1,0,0,0,0); Start-Sleep -Seconds 30 }}"
